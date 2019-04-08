@@ -98,6 +98,27 @@ spec:
   selector:
     component: spark-driver
 ---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: spark-driver-ingress
+  namespace: spark
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  labels:
+    app: spark
+    component: spark-driver
+spec:
+  rules:
+  - host: spark.k8s.aws.annarchy.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: spark-driver-service
+          servicePort: http
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -149,3 +170,31 @@ spec:
   selector:
     component: spark-driver-ui-proxy
   type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: spark
+  name: spark-worker-controller
+  labels:
+    app: spark
+    component: spark-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: spark-worker
+  template:
+    metadata:
+      labels:
+        component: spark-worker
+    spec:
+      containers:
+      - name: spark-worker
+        image: k8s.gcr.io/spark:1.5.2_v1
+        command: ["/start-worker"]
+        ports:
+          - containerPort: 8081
+        resources:
+          requests:
+            cpu: 100m
