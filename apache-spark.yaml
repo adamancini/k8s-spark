@@ -137,8 +137,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: spark
   name: spark-ui-proxy-lb
+  labels:
+    app: spark
+    component: spark-driver-ui-proxy
 spec:
   ports:
   - port: 80
     targetPort: 80
+  selector:
+    component: spark-driver-ui-proxy
+  type: LoadBalancer
